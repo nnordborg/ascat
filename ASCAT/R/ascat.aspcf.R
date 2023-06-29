@@ -9,6 +9,7 @@
 #' @param out.dir directory in which output files will be written. Can be set to NA to not write PCFed files.
 #' @param out.prefix prefix for output file names
 #' @param seed A seed to be set when subsampling SNPs for X in males (optional, default=as.integer(Sys.time())).
+#' @param tau The multiplication factor used in the test for deciding if a segment is in allelic balance or not. Default = sqrt(3)≈1.73205
 #'
 #' @return output: ascat data structure containing:\cr
 #' 1. Tumor_LogR data matrix\cr
@@ -23,7 +24,7 @@
 #'
 #' @export
 #'
-ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), ascat.gg = NULL, penalty = 70, out.dir=".", out.prefix="", seed=as.integer(Sys.time())) {
+ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), ascat.gg = NULL, penalty = 70, out.dir=".", out.prefix="", seed=as.integer(Sys.time()), tau=sqrt(3)) {
   set.seed(seed)
   # first, set germline genotypes
   gg = NULL
@@ -117,7 +118,7 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
             bafASPCF = rep(mean(bafselwinsmirrored),length(logRaveraged))
             if ('isTargetedSeq' %in% names(ASCATobj) && ASCATobj$isTargetedSeq && bafASPCF[1]<=0.55) bafASPCF=rep(0.5,length(logRaveraged))
           } else {
-            PCFed = fastAspcf(logRaveraged,bafselwins,6,segmentlength,ASCATobj$isTargetedSeq)
+            PCFed = fastAspcf(logRaveraged,bafselwins,6,segmentlength,tau,ASCATobj$isTargetedSeq)
             logRASPCF = PCFed$yhat1
             bafASPCF = PCFed$yhat2
           }
@@ -309,7 +310,7 @@ predictGermlineHomozygousStretches = function(chr, hom) {
 # Whole chromosomes/chromosome arms wrapper function
 #
 
-fastAspcf <- function(logR, allB, kmin, gamma, isTargetedSeq){
+fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
   if (is.null(isTargetedSeq)) isTargetedSeq=F
   
   N <- length(logR)
@@ -384,7 +385,7 @@ fastAspcf <- function(logR, allB, kmin, gamma, isTargetedSeq){
     
     # Make a (slightly arbitrary) decision concerning branches
     # This may be improved by a test of equal variances
-    if(sqrt(sd2^2+mu^2) < 2*sd2){
+    if(mu < tau*sd2){
       # if(sd3 < 1.8*sd2){
       mu <- 0
     }
