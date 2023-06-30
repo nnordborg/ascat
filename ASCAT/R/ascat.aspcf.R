@@ -9,7 +9,8 @@
 #' @param out.dir directory in which output files will be written. Can be set to NA to not write PCFed files.
 #' @param out.prefix prefix for output file names
 #' @param seed A seed to be set when subsampling SNPs for X in males (optional, default=as.integer(Sys.time())).
-#' @param tau The multiplication factor used in the test for deciding if a segment is in allelic balance or not. Default = sqrt(3)≈1.73205
+#' @param tau The multiplication factor used in the test for deciding if a segment is in allelic balance or not. Default = 1.78 if new.imbalance.test=TRUE, otherwise sqrt(3)≈1.73205
+#' @param new.imbalance.test A flag to decide if the new segment-based test for allelic imbalance should be used. Default = TRUE
 #'
 #' @return output: ascat data structure containing:\cr
 #' 1. Tumor_LogR data matrix\cr
@@ -24,7 +25,14 @@
 #'
 #' @export
 #'
-ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), ascat.gg = NULL, penalty = 70, out.dir=".", out.prefix="", seed=as.integer(Sys.time()), tau=sqrt(3)) {
+ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), ascat.gg = NULL, penalty = 70, out.dir=".", out.prefix="", seed=as.integer(Sys.time()), tau=NA, new.imbalance.test=T) {
+  if (is.na(tau)) {
+    if (new.imbalance.test) {
+      tau = 1.78
+    } else {
+      tau = sqrt(3)
+    }
+  }
   set.seed(seed)
   # first, set germline genotypes
   gg = NULL
@@ -118,7 +126,7 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
             bafASPCF = rep(mean(bafselwinsmirrored),length(logRaveraged))
             if ('isTargetedSeq' %in% names(ASCATobj) && ASCATobj$isTargetedSeq && bafASPCF[1]<=0.55) bafASPCF=rep(0.5,length(logRaveraged))
           } else {
-            PCFed = fastAspcf(logRaveraged,bafselwins,6,segmentlength,tau,ASCATobj$isTargetedSeq)
+            PCFed = fastAspcf(logRaveraged,bafselwins,6,segmentlength,tau,ASCATobj$isTargetedSeq,new.imbalance.test)
             logRASPCF = PCFed$yhat1
             bafASPCF = PCFed$yhat2
           }
@@ -310,8 +318,9 @@ predictGermlineHomozygousStretches = function(chr, hom) {
 # Whole chromosomes/chromosome arms wrapper function
 #
 
-fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
+fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq, newImbalanceTest){
   if (is.null(isTargetedSeq)) isTargetedSeq=F
+  if (is.null(newImbalanceTest)) newImbalanceTest=F
   
   N <- length(logR)
   w <- 1000 #w: windowsize
@@ -322,7 +331,7 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
   
   nseg = 0
   var2 = 0
-  var3 = 0
+  #var3 = 0
   breakpts = 0
   larger = TRUE
   repeat{
@@ -335,7 +344,7 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
     
     sd1 <- getMad(logRpart)
     sd2 <- getMad(allBflip)
-    sd3 <- getMad(allBpart) 
+    #sd3 <- getMad(allBpart) 
     
     #Must check that sd1 and sd2 are defined and != 0:
     sd.valid <- c(!is.na(sd1),!is.na(sd2),sd1!=0,sd2!=0)
@@ -348,7 +357,7 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
       larger = breakptspart>breakpts[length(breakpts)]
       breakpts <- c(breakpts, breakptspart[larger])
       var2 <- var2 + sd2^2
-      var3 <- var3 + sd3^2
+      #var3 <- var3 + sd3^2
       nseg = nseg+1
     }
     
@@ -363,7 +372,7 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
   breakpts <- unique(c(breakpts, N))
   if(nseg==0){nseg=1}  #just in case the sd-test never passes.
   sd2 <- sqrt(var2/nseg)
-  sd3 <- sqrt(var3/nseg)
+  #sd3 <- sqrt(var3/nseg)
   
   # On each segment calculate mean of unflipped B allele data
   frst <- breakpts[1:length(breakpts)-1] + 1
@@ -381,13 +390,23 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq){
       mu <- 0
     }else{
       mu <- mean(abs(yi2-0.5))
-    }
-    
-    # Make a (slightly arbitrary) decision concerning branches
-    # This may be improved by a test of equal variances
-    if(mu < tau*sd2){
-      # if(sd3 < 1.8*sd2){
-      mu <- 0
+      
+      # Make a (slightly arbitrary) decision concerning branches
+      # This may be improved by a test of equal variances
+      if (newImbalanceTest) {
+        yi2flip <- yi2
+        yi2flip[yi2 > 0.5] <- 1 - yi2[yi2 > 0.5]
+        madSegment = getMad(yi2)
+        madFlip = getMad(yi2flip)
+        if (madSegment < tau*madFlip) {
+          mu <- 0
+        }
+      } else {
+        if(mu < tau*sd2){
+          # if(sd3 < 1.8*sd2){
+          mu <- 0
+        }
+      }
     }
     if (isTargetedSeq && mu<=0.05) mu=0
     yhat2[frst[i]:last[i]] <- rep(mu+0.5,last[i]-frst[i]+1)
