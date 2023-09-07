@@ -11,7 +11,9 @@ ascat.aspcf(
   penalty = 70,
   out.dir = ".",
   out.prefix = "",
-  seed = as.integer(Sys.time())
+  seed = as.integer(Sys.time()),
+  tau = NA,
+  imbalance.test = NA
 )
 }
 \arguments{
@@ -28,6 +30,10 @@ ascat.aspcf(
 \item{out.prefix}{prefix for output file names}
 
 \item{seed}{A seed to be set when subsampling SNPs for X in males (optional, default=as.integer(Sys.time())).}
+
+\item{tau}{The multiplication factor or limit used in the test for deciding if a segment is in allelic balance or not. Default value depend on the test. 1.78 (mad_segment), sqrt(3)≈1.73205 (legacy), 0.4 (bimodality_coefficient)}
+
+\item{imbalance.test}{Which test for allelic imbalance should be used. Possible values are: mad_segment (default), legacy (original ASCAT), bimodality_coefficient (from the mousetrap package)}
 }
 \value{
 output: ascat data structure containing:\cr
