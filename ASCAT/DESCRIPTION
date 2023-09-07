@@ -12,7 +12,7 @@ Authors@R: c(person("Peter", "Van Loo", role=c("aut","cre"), email="Peter.VanLoo
     person("Jonas","Demeulemeester", role="ctb"),
     person("Maxime","Tarabichi", role="ctb"),
     person("Tom","Lesluyes", role="ctb"),
-    person("Nicklas","Nordborg", role="ctb", comment="SCAN-B fork", email="nicklas.nordborg@med.lu.se")
+    person("Nicklas","Nordborg", role="ctb", comment="SCAN-B fork", email="nicklas.nordborg@med.lu.se"))
 Author: Peter Van Loo [aut, cre], Gro Nielsen [ctb], Jiqiu Cheng [ctb], Stefan Dentro [ctb],
     Edith Ross [ctb], Kerstin Haase [ctb], Jonas Demeulemeester [ctb], Maxime Tarabichi [ctb],
     Tom Lesluyes [ctb]
