@@ -1,8 +1,8 @@
 Package: ASCAT
 Type: Package
-Title: Allele-Specific Copy Number Analysis of Tumors
-Version: 3.1.2
-Date: 2023-04-12
+Title: Allele-Specific Copy Number Analysis of Tumors (SCAN-B fork)
+Version: 3.1.2-2
+Date: 2023-09-07
 Authors@R: c(person("Peter", "Van Loo", role=c("aut","cre"), email="Peter.VanLoo@crick.ac.uk"),
     person("Gro", "Nielsen", role="ctb"),
     person("Jiqiu","Cheng", role="ctb"),
@@ -11,7 +11,8 @@ Authors@R: c(person("Peter", "Van Loo", role=c("aut","cre"), email="Peter.VanLoo
     person("Kerstin","Haase", role="ctb"),
     person("Jonas","Demeulemeester", role="ctb"),
     person("Maxime","Tarabichi", role="ctb"),
-    person("Tom","Lesluyes", role="ctb"))
+    person("Tom","Lesluyes", role="ctb"),
+    person("Nicklas","Nordborg", role="ctb", comment="SCAN-B fork", email="nicklas.nordborg@med.lu.se")
 Author: Peter Van Loo [aut, cre], Gro Nielsen [ctb], Jiqiu Cheng [ctb], Stefan Dentro [ctb],
     Edith Ross [ctb], Kerstin Haase [ctb], Jonas Demeulemeester [ctb], Maxime Tarabichi [ctb],
     Tom Lesluyes [ctb]
@@ -30,7 +31,8 @@ Depends:
     parallel,
     doParallel,
     foreach,
-    utils
+    utils,
+    mousetrap
 License: GPL-3
 Encoding: UTF-8
 LazyLoad: yes

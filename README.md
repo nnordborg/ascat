@@ -1,4 +1,4 @@
-# Allele-Specific Copy Number Analysis of Tumors
+# Allele-Specific Copy Number Analysis of Tumors (SCAN-B fork)
 
 ## Description
 
@@ -15,8 +15,14 @@ Bioconductor package dependencies: [GenomicRanges](https://bioconductor.org/pack
 Processing high-throughput sequencing data: [alleleCounter](https://github.com/cancerit/alleleCount) (C version)
 
 Installing ASCAT using R: `devtools::install_github('VanLoo-lab/ascat/ASCAT')`
+Installing the SCAN-B fork: `devtools::install_github('nnordborg/ascat/ASCAT@scanb')`
 
 ## Changes since v2.5.3
+### Changes in the SCANB-fork:
+- Added support for different methods for checking if a segment is in allelic imbalance or not. The `ascat.aspcf` method have two new parameters:
+  - `imbalance.test`: Specify which test to use. Possible values are: `legacy` (the original ASCAT method), `mad_segment` (compare MAD values per segment) and `bimodality_coefficient` (uses the bimodality_coefficient() function from the mousetrap package with BAF values per segment)
+  - `tau`: comparison factor or limit used by the selected test method. The default value depends on the test method.
+
 ### Major changes:
 - Default penalty for both ASPCF (`ascat.aspcf`) and ASmultiPCF (`ascat.asmultipcf`) is now **70** (was 25). It is suitable for SNP arrays, as well as WES and WGS data.
 - LogR correction can now be used to correct for both GC content (standard requirement) and replication timing (optional). Also, the correction method has been updated (it now uses autosomes to compute correlations with covariates and applies a linear model with *splines* on all chromosomes). Please note that `ascat.correctLogR` should be used from now on (`ascat.GCcorrect` is still there for backward compatibility but is just a wrapper to `ascat.correctLogR`).
