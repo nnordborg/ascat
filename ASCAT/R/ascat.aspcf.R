@@ -56,6 +56,7 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
   rownames(Tumor_LogR_segmented) = rownames(ASCATobj$Tumor_LogR)
   colnames(Tumor_LogR_segmented) = colnames(ASCATobj$Tumor_LogR)
   Tumor_BAF_segmented = list()
+  ImbalanceTest = list()
   for (sample in selectsamples) {
     print.noquote(paste("Sample ", ASCATobj$samples[sample], " (",sample,"/",length(ASCATobj$samples),")",sep=""))
     logrfilename = file.path(out.dir, paste(out.prefix, ASCATobj$samples[sample],".LogR.PCFed.txt",sep=""))
@@ -89,6 +90,10 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
       tbsam = ASCATobj$Tumor_BAF[,sample]
       names(tbsam) = rownames(ASCATobj$Tumor_BAF)
       homosam = gg[,sample]
+      # Vectors for storing imbalance scores
+      imbalanceChr = c()
+      imbalanceScore = c()
+      allMu = c()
       for (chrke in 1:length(ASCATobj$chr)) {
         lr = ASCATobj$Tumor_LogR[ASCATobj$chr[[chrke]],sample]
         #winsorize to remove outliers
@@ -134,6 +139,9 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
             PCFed = fastAspcf(logRaveraged,bafselwins,6,segmentlength,tau,ASCATobj$isTargetedSeq,imbalance.test)
             logRASPCF = PCFed$yhat1
             bafASPCF = PCFed$yhat2
+            imbalanceChr = c(imbalanceChr, rep(paste0("chr",ASCATobj$SNPpos$Chromosome[ASCATobj$chr[[chrke]]][1]), length(PCFed$imbalanceScore)))
+            imbalanceScore = c(imbalanceScore, PCFed$imbalanceScore)
+            allMu = c(allMu, PCFed$allMu)
           }
           names(bafASPCF)=names(indices)
           logRc = numeric(0)
@@ -253,8 +261,9 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
     bafPCFed = as.matrix(bafPCFed)
     Tumor_LogR_segmented[,sample] = logRPCFed
     Tumor_BAF_segmented[[sample]] = 1-bafPCFed
+    ImbalanceTest[[sample]]=data.frame(Chr=imbalanceChr, ImbalanceScore=round(imbalanceScore, digits=4), Mu=round(allMu, digits=4))
   }
-  
+  ASCATobj$ImbalanceTest=ImbalanceTest
   ASCATobj$Tumor_LogR_segmented=Tumor_LogR_segmented
   ASCATobj$Tumor_BAF_segmented=Tumor_BAF_segmented
   ASCATobj$failedarrays=ascat.gg$failedarrays
@@ -385,6 +394,8 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq, imbalanceTest
   
   yhat1 <- rep(NA,N)
   yhat2 <- rep(NA,N)
+  imbalanceScore <- rep(NA,nseg)
+  allMu <- rep(NA,nseg)
   
   for(i in 1:nseg){
     yhat1[frst[i]:last[i]] <- rep(mean(logR[frst[i]:last[i]]), last[i]-frst[i]+1)
@@ -398,30 +409,25 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq, imbalanceTest
       # Make a (slightly arbitrary) decision concerning branches
       # This may be improved by a test of equal variances
       if (imbalanceTest=='legacy') {
-          if(mu < tau*sd2){
-              # if(sd3 < 1.8*sd2){
-              mu <- 0
-          }
+        score <- mu/sd2
       } else if (imbalanceTest=='bimodality_coefficient') {
-        bmc <- bimodality_coefficient(yi2, na.rm=T)
-        if (bmc < tau) {
-          mu <- 0
-        }
+        score <- bimodality_coefficient(yi2, na.rm=T)
       } else {
         # new test
         yi2flip <- yi2
         yi2flip[yi2 > 0.5] <- 1 - yi2[yi2 > 0.5]
         madSegment = getMad(yi2)
         madFlip = getMad(yi2flip)
-        if (madSegment < tau*madFlip) {
-          mu <- 0
-        }
+        score <- madSegment/madFlip
       }
+      if (score < tau) mu = 0
+      imbalanceScore[i] = score
+      allMu[i] = mu
     }
     if (isTargetedSeq && mu<=0.05) mu=0
     yhat2[frst[i]:last[i]] <- rep(mu+0.5,last[i]-frst[i]+1)
   }
-  return(list(yhat1=yhat1,yhat2=yhat2))
+  return(list(yhat1=yhat1,yhat2=yhat2,imbalanceScore=imbalanceScore,allMu=allMu))
   
 }#end fastAspcf
 
