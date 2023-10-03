@@ -94,6 +94,8 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
       imbalanceChr = c()
       imbalanceScore = c()
       allMu = c()
+      usedTest = c()
+      numSnp = c()
       for (chrke in 1:length(ASCATobj$chr)) {
         lr = ASCATobj$Tumor_LogR[ASCATobj$chr[[chrke]],sample]
         #winsorize to remove outliers
@@ -142,6 +144,8 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
             imbalanceChr = c(imbalanceChr, rep(paste0("chr",ASCATobj$SNPpos$Chromosome[ASCATobj$chr[[chrke]]][1]), length(PCFed$imbalanceScore)))
             imbalanceScore = c(imbalanceScore, PCFed$imbalanceScore)
             allMu = c(allMu, PCFed$allMu)
+            usedTest = c(usedTest, PCFed$usedTest)
+            numSnp = c(numSnp, PCFed$numSnp)
           }
           names(bafASPCF)=names(indices)
           logRc = numeric(0)
@@ -261,7 +265,7 @@ ascat.aspcf = function(ASCATobj, selectsamples = 1:length(ASCATobj$samples), asc
     bafPCFed = as.matrix(bafPCFed)
     Tumor_LogR_segmented[,sample] = logRPCFed
     Tumor_BAF_segmented[[sample]] = 1-bafPCFed
-    ImbalanceTest[[sample]]=data.frame(Chr=imbalanceChr, ImbalanceScore=round(imbalanceScore, digits=4), Mu=round(allMu, digits=4))
+    ImbalanceTest[[sample]]=data.frame(Chr=imbalanceChr, ImbalanceScore=round(imbalanceScore, digits=4), Mu=round(allMu, digits=4), UsedTest=usedTest, NumSNP=numSnp)
   }
   ASCATobj$ImbalanceTest=ImbalanceTest
   ASCATobj$Tumor_LogR_segmented=Tumor_LogR_segmented
@@ -396,11 +400,13 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq, imbalanceTest
   yhat2 <- rep(NA,N)
   imbalanceScore <- rep(NA,nseg)
   allMu <- rep(NA,nseg)
-  
+  usedTest <- rep(imbalanceTest,nseg)
+  numSnp <- rep(NA,nseg)
   for(i in 1:nseg){
     yhat1[frst[i]:last[i]] <- rep(mean(logR[frst[i]:last[i]]), last[i]-frst[i]+1)
     yi2 <- allB[frst[i]:last[i]]
     # Center data around zero (by subtracting 0.5) and estimate mean
+    numSnp[i] = length(yi2)
     if(length(yi2)== 0){
       mu <- 0
     }else{
@@ -420,14 +426,22 @@ fastAspcf <- function(logR, allB, kmin, gamma, tau, isTargetedSeq, imbalanceTest
         madFlip = getMad(yi2flip)
         score <- madSegment/madFlip
       }
-      if (score < tau) mu = 0
+      if (is.na(score)) {
+        # The bimodality_coefficient and MAD test may fail (division by 0) 
+        # If this happens we revert to the legacy test with default tau=sqrt(3)
+        score = mu/sd2
+        if (score < sqrt(3)) mu = 0
+        usedTest[i] = 'legacy'
+      } else {
+        if (score < tau) mu = 0
+      }
       imbalanceScore[i] = score
       allMu[i] = mu
     }
     if (isTargetedSeq && mu<=0.05) mu=0
     yhat2[frst[i]:last[i]] <- rep(mu+0.5,last[i]-frst[i]+1)
   }
-  return(list(yhat1=yhat1,yhat2=yhat2,imbalanceScore=imbalanceScore,allMu=allMu))
+  return(list(yhat1=yhat1,yhat2=yhat2,imbalanceScore=imbalanceScore,allMu=allMu,usedTest=usedTest,numSnp=numSnp))
   
 }#end fastAspcf
 
