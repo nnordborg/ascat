@@ -29,7 +29,8 @@ runASCAT(
   max_ploidy = 5.5,
   min_purity = 0.1,
   max_purity = 1.05,
-  X_nonPAR = NULL
+  X_nonPAR = NULL,
+  grid.lines = T
 )
 }
 \arguments{
@@ -82,6 +83,8 @@ runASCAT(
 \item{max_purity}{a numerical parameter determining the maximum boundary of the purity solution search space. Default=1.05}
 
 \item{X_nonPAR}{Optional vector containing genomic coordinates (start & stop) of nonPAR region on X. Default=NULL}
+
+\item{grid.lines}{when set to true, grid lines are added to the sunrise plot to make it easier to manually select values for ploidy and purity (default: TRUE)}
 }
 \value{
 list containing optimal purity and ploidy

@@ -22,6 +22,7 @@ Installing the SCAN-B fork: `devtools::install_github('nnordborg/ascat/ASCAT@sca
 - Added support for different methods for checking if a segment is in allelic imbalance or not. The `ascat.aspcf` method have two new parameters:
   - `imbalance.test`: Specify which test to use. Possible values are: `legacy` (the original ASCAT method), `mad_segment` (compare MAD values per segment) and `bimodality_coefficient` (uses the bimodality_coefficient() function from the mousetrap package with BAF values per segment)
   - `tau`: comparison factor or limit used by the selected test method. The default value depends on the test method.
+- Added support for drawing grid lines on the sunrise plot to make it easier to manually select values for ploidy and purity.
 
 ### Major changes:
 - Default penalty for both ASPCF (`ascat.aspcf`) and ASmultiPCF (`ascat.asmultipcf`) is now **70** (was 25). It is suitable for SNP arrays, as well as WES and WGS data.

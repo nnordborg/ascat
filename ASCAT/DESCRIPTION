@@ -1,8 +1,8 @@
 Package: ASCAT
 Type: Package
 Title: Allele-Specific Copy Number Analysis of Tumors (SCAN-B fork)
-Version: 3.1.2-2
-Date: 2023-09-07
+Version: 3.1.2-3
+Date: 2023-10-04
 Authors@R: c(person("Peter", "Van Loo", role=c("aut","cre"), email="Peter.VanLoo@crick.ac.uk"),
     person("Gro", "Nielsen", role="ctb"),
     person("Jiqiu","Cheng", role="ctb"),

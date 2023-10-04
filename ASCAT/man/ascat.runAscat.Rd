@@ -18,7 +18,8 @@ ascat.runAscat(
   psi_manual = NA,
   img.dir = ".",
   img.prefix = "",
-  write_segments = F
+  write_segments = F,
+  grid.lines = T
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ ascat.runAscat(
 \item{img.prefix}{prefix for figure names}
 
 \item{write_segments}{Optional flag to output segments in text files (.segments_raw.txt and .segments.txt under img.dir). Default=F}
+
+\item{grid.lines}{when set to true, grid lines are added to the sunrise plot to make it easier to manually select values for ploidy and purity (default: TRUE)}
 }
 \value{
 an ASCAT output object, containing:\cr

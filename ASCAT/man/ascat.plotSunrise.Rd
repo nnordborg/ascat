@@ -4,7 +4,7 @@
 \alias{ascat.plotSunrise}
 \title{ascat.plotSunrise}
 \usage{
-ascat.plotSunrise(d, psi_opt1, rho_opt1, minim = T)
+ascat.plotSunrise(d, psi_opt1, rho_opt1, minim = T, grid.lines = T)
 }
 \arguments{
 \item{d}{distance matrix for a range of ploidy and tumour percentage values}
@@ -14,6 +14,8 @@ ascat.plotSunrise(d, psi_opt1, rho_opt1, minim = T)
 \item{rho_opt1}{optimal purity}
 
 \item{minim}{when set to true, optimal regions in the sunrise plot are depicted in blue; if set to false, colours are inverted and red corresponds to optimal values (default: TRUE)}
+
+\item{grid.lines}{when set to true, grid lines are added to the sunrise plot to make it easier to manually select values for ploidy and purity (default: TRUE)}
 }
 \value{
 plot visualising range of ploidy and tumour percentage values
