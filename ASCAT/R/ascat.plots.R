@@ -145,10 +145,11 @@ ascat.plotSegmentedData = function(ASCATobj, img.dir=".", img.prefix="", logr.y_
 #' @param psi_opt1 optimal ploidy
 #' @param rho_opt1 optimal purity
 #' @param minim when set to true, optimal regions in the sunrise plot are depicted in blue; if set to false, colours are inverted and red corresponds to optimal values (default: TRUE)
+#' @param grid.lines when set to true, grid lines are added to the sunrise plot to make it easier to manually select values for ploidy and purity (default: TRUE)
 #'
 #' @return plot visualising range of ploidy and tumour percentage values
 #' @export
-ascat.plotSunrise<-function(d, psi_opt1, rho_opt1, minim=T){
+ascat.plotSunrise<-function(d, psi_opt1, rho_opt1, minim=T, grid.lines=T){
   
   par(mar = c(5,5,0.5,0.5), cex=0.75, cex.lab=2, cex.axis=2)
   
@@ -172,7 +173,15 @@ ascat.plotSunrise<-function(d, psi_opt1, rho_opt1, minim=T){
     PURITY_LABELS=seq(purity_min, purity_max, length.out=4)
   }
   axis(2, at = (PURITY_LABELS-purity_min)/(purity_max-purity_min), labels = PURITY_LABELS)
-  
+  # Add grid lines
+  if (grid.lines) {
+    # Major grid lines 
+    abline(h=(seq(purity_min, purity_max, 0.1)-purity_min)/(purity_max-purity_min), col=adjustcolor("black", alpha.f = 0.6))
+    abline(v=(seq(ploidy_min, ploidy_max, 1)-ploidy_min)/(ploidy_max-ploidy_min), col=adjustcolor("black", alpha.f = 0.6))
+    # Minor grid lines 
+    abline(h=(seq(purity_min, purity_max, 0.02)-purity_min)/(purity_max-purity_min), col=adjustcolor("lightgrey", alpha.f = 0.6))
+    abline(v=(seq(ploidy_min, ploidy_max, 0.1)-ploidy_min)/(ploidy_max-ploidy_min), col=adjustcolor("lightgrey", alpha.f = 0.6))
+  }
   if(psi_opt1>0 && rho_opt1>0){
     points((psi_opt1-ploidy_min)/(ploidy_max-ploidy_min),(rho_opt1-purity_min)/(purity_max-purity_min),col="green",pch=4, cex = 2)
   }

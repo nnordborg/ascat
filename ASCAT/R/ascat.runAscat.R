@@ -15,6 +15,7 @@
 #' @param img.dir directory in which figures will be written
 #' @param img.prefix prefix for figure names
 #' @param write_segments Optional flag to output segments in text files (.segments_raw.txt and .segments.txt under img.dir). Default=F
+#' @param grid.lines when set to true, grid lines are added to the sunrise plot to make it easier to manually select values for ploidy and purity (default: TRUE)
 #' @details Note: for copy number only probes, nA contains the copy number value and nB = 0.
 #' @return an ASCAT output object, containing:\cr
 #' 1. nA: copy number of the A allele\cr
@@ -30,7 +31,7 @@
 #'
 #' @export
 #'
-ascat.runAscat = function(ASCATobj, gamma = 0.55, pdfPlot = F, y_limit = 5, circos=NA, min_ploidy=1.5, max_ploidy=5.5, min_purity=0.1, max_purity=1.05, rho_manual = NA, psi_manual = NA, img.dir=".", img.prefix="", write_segments=F) {
+ascat.runAscat = function(ASCATobj, gamma = 0.55, pdfPlot = F, y_limit = 5, circos=NA, min_ploidy=1.5, max_ploidy=5.5, min_purity=0.1, max_purity=1.05, rho_manual = NA, psi_manual = NA, img.dir=".", img.prefix="", write_segments=F, grid.lines=T) {
   goodarrays=NULL
   N_samples=dim(ASCATobj$Tumor_LogR)[2]
   res = vector("list",N_samples)
@@ -63,7 +64,7 @@ ascat.runAscat = function(ASCATobj, gamma = 0.55, pdfPlot = F, y_limit = 5, circ
     res[[arraynr]] = runASCAT(lrr,baf,lrrsegm,bafsegm,ASCATobj$gender[arraynr],ASCATobj$SNPpos,ASCATobj$ch,ASCATobj$chrs,ASCATobj$sexchromosomes, failedqualitycheck,
                               file.path(img.dir, paste(img.prefix, ASCATobj$samples[arraynr],".sunrise.png",sep="")),file.path(img.dir, paste(img.prefix, ASCATobj$samples[arraynr],".ASCATprofile.", ending,sep="")),
                               file.path(img.dir, paste(img.prefix, ASCATobj$samples[arraynr],".rawprofile.", ending,sep="")),NA,
-                              gamma,rho_manual[arraynr],psi_manual[arraynr], pdfPlot, y_limit, circosName, min_ploidy, max_ploidy, min_purity, max_purity, ASCATobj$X_nonPAR)
+                              gamma,rho_manual[arraynr],psi_manual[arraynr], pdfPlot, y_limit, circosName, min_ploidy, max_ploidy, min_purity, max_purity, ASCATobj$X_nonPAR,grid.lines=grid.lines)
     if(!is.na(res[[arraynr]]$rho)) {
       goodarrays[length(goodarrays)+1] = arraynr
     }
@@ -210,6 +211,7 @@ ascat.runAscat = function(ASCATobj, gamma = 0.55, pdfPlot = F, y_limit = 5, circ
 #' @param min_purity a numerical parameter determining the minimum boundary of the purity solution search space. Default=0.1
 #' @param max_purity a numerical parameter determining the maximum boundary of the purity solution search space. Default=1.05
 #' @param X_nonPAR Optional vector containing genomic coordinates (start & stop) of nonPAR region on X. Default=NULL
+#' @param grid.lines when set to true, grid lines are added to the sunrise plot to make it easier to manually select values for ploidy and purity (default: TRUE)
 #'
 #' @keywords internal
 #'
@@ -221,7 +223,7 @@ ascat.runAscat = function(ASCATobj, gamma = 0.55, pdfPlot = F, y_limit = 5, circ
 runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, gender, SNPpos, chromosomes, chrnames, sexchromosomes, failedqualitycheck = F,
                     distancepng = NA, copynumberprofilespng = NA, nonroundedprofilepng = NA, aberrationreliabilitypng = NA, gamma = 0.55,
                     rho_manual = NA, psi_manual = NA, pdfPlot = F, y_limit = 5, circos=NA, min_ploidy=1.5, max_ploidy=5.5, min_purity=0.1,
-                    max_purity=1.05, X_nonPAR=NULL) {
+                    max_purity=1.05, X_nonPAR=NULL, grid.lines=T) {
   ch = chromosomes
   chrs = chrnames
   b = bafsegmented
@@ -458,7 +460,7 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, gender, SNPpos, chromo
     if (!is.na(distancepng)) {
       png(filename = distancepng, width = 1000, height = 1000, res = 1000/7)
     }
-    ascat.plotSunrise(plot_d,psi_opt1,rho_opt1)
+    ascat.plotSunrise(plot_d,psi_opt1,rho_opt1,grid.lines=grid.lines)
     if (!is.na(distancepng)) {
       dev.off()
     }
@@ -746,7 +748,7 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, gender, SNPpos, chromo
     
   } else {
     
-    name=gsub(".sunrise.png","",basename(distancepng))
+    name=gsub(".sunrise.png","",basename(distancepng),grid.lines=grid.lines)
     
     png(filename = distancepng, width = 1000, height = 1000, res = 1000/7)
     ascat.plotSunrise(plot_d,0,0)
