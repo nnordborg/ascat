@@ -748,10 +748,10 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, gender, SNPpos, chromo
     
   } else {
     
-    name=gsub(".sunrise.png","",basename(distancepng),grid.lines=grid.lines)
+    name=gsub(".sunrise.png","",basename(distancepng))
     
     png(filename = distancepng, width = 1000, height = 1000, res = 1000/7)
-    ascat.plotSunrise(plot_d,0,0)
+    ascat.plotSunrise(plot_d,0,0,grid.lines=grid.lines)
     dev.off()
     
     warning(paste("ASCAT could not find an optimal ploidy and purity value for sample ", name, ".\n", sep=""))
